@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcyrpt from "bcrypt"
 import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/ApiError.js";
 
 const userSchema = new mongoose.Schema({
     fullName:{
@@ -38,6 +39,14 @@ userSchema.pre("save", async function(next){
     this.password = await bcyrpt.hash(this.password, 10)
     next()
 })
+
+userSchema.methods.isPasswordCorrect = async function(password){
+    try {
+        return await bcyrpt.compare(password, this.password)
+    } catch (error) {
+        throw new ApiError("Invalid credientials")
+    }
+}
 
 
 

@@ -62,8 +62,13 @@ const user = asyncHandler( async(req, res)=>{
         ApiError(401, "Something happened while registration")
     }
 
+    const token = user.verificationToken
     
-    sendEmail(user.email, user.verificationToken)
+    sendEmail(user.email, user.verificationToken,
+         'Email Verification',
+         `Please verify your email by clicking the following link: http://localhost:4000/verify/${token}`,
+         `Please verify your email by clicking the following link: <a href="http://localhost:4000/verify/${token}">Verify Email</a>`
+        )
 
     return res
     .status(200)
@@ -74,28 +79,55 @@ const user = asyncHandler( async(req, res)=>{
 const verifyingUser = asyncHandler(async(req, res)=>{
     const {token} = req.params;
     
-
-        const decoded = await jwt.verify(token, process.env.VERIFY_TOKEN_SECRET)
-        if (!decoded) {
-            throw new ApiError(401, "Token is not vaild")
-        }
-        const user = await User.findOne({email: decoded.email, verificationToken: token})
-        
-        if(!user){
-            throw new ApiError(401, "Failed verifying token")
-        }
-
-        user.emailVerified = true
-        user.verificationToken = null
-        console.log(user)
-
-        user.save({validateBeforeSave: false})
-        res.status(200)
-        .json(
-            new ApiResponse(200,user, "Verified Successfully")
-        )
+        try {
+            const decoded = await jwt.verify(token, process.env.VERIFY_TOKEN_SECRET)
+            if (!decoded) {
+                throw new ApiError(401, "Token is not vaild")
+            }
+            const user = await User.findOne({email: decoded.email, verificationToken: token})
+            
+            if(!user){
+                throw new ApiError(401, "Failed verifying token")
+            }
     
+            user.emailVerified = true
+            user.verificationToken = null
+
+    
+            user.save({validateBeforeSave: false})
+            res.status(200)
+            .json(
+                new ApiResponse(200,user, "Verified Successfully")
+            )
+        } catch (error) {
+            throw new ApiError(401, "Invalid Token")
+        }
     
 })
 
-export {user, verifyingUser}
+const userLogin = asyncHandler(async (req,res)=>{
+    const {username, email, password} = req.body
+
+    if(!username && !email){
+        throw ApiError(401, "Fields are required")
+    }
+
+    const user = await User.findOne({
+        $or:[{email}, {username}]
+    })
+
+    if(!user){
+        throw new ApiError(401, "User not found")
+    }
+
+    const passwordVerify = await user.isPasswordCorrect(password)
+
+    if(!passwordVerify){
+        throw new ApiError(401, "Password is incorrect")
+    }
+
+    res.status(200)
+    .json(new ApiResponse(200, "logged in"))
+})
+
+export {user, verifyingUser, userLogin}
