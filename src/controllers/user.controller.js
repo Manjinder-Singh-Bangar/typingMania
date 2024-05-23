@@ -2,7 +2,24 @@ import { User } from "../models.js/user.model.js";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { sendEmail } from "../utils/sendEmail.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+
+
+const generateVerifyToken = asyncHandler(async(email)=>{
+    try {
+        const user = await User.findOne({email})
+        const verificationToken = user.generateVerifyToken()
+
+        user.verificationToken = verificationToken
+
+        await user.save({validateBeforeSave:false})
+
+    } catch (error) {
+        console.log(`error occured while generating verify token, error: ${error}`)
+    }
+    
+})
 
 const user = asyncHandler( async(req, res)=>{
     const {fullName, username, email, password} = req.body
@@ -15,6 +32,7 @@ const user = asyncHandler( async(req, res)=>{
         throw new ApiError(400, "Enter a valid email")
     }
 
+
     const existedUser = await User.findOne({
         $or:[
             {username},
@@ -23,7 +41,7 @@ const user = asyncHandler( async(req, res)=>{
     })
 
     if (existedUser) {
-        ApiError(401, "User already existed")
+        throw new ApiError(401, "User already exists")
     }
 
     const user = await User.create({
@@ -31,19 +49,28 @@ const user = asyncHandler( async(req, res)=>{
         username,
         email,
         password
-
     })
 
-    const createdUser = await User.findById(user._id).select("-password -refreshToken")
+    const verificationTokenVal = user.generateVerifyToken()
+    user.verificationToken = verificationTokenVal
+    await user.save({validateBeforeSave:false});
+
+    const createdUser = await User.findById(user._id).select("-password -refreshToken -verificationToken")
 
     if(!createdUser){
         ApiError(401, "Something happened while registration")
     }
 
+    
+    sendEmail(user.email, user.verificationToken)
+
     return res
     .status(200)
     .json(new ApiResponse( 200, createdUser, "User has created succesfully" ) )
-        
+    
+})
+
+const verifyingUser = asyncHandler(async(req, res)=>{
     
 })
 
