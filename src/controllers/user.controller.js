@@ -1,5 +1,6 @@
 import { User } from "../models.js/user.model.js";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken"
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendEmail } from "../utils/sendEmail.js";
@@ -71,7 +72,30 @@ const user = asyncHandler( async(req, res)=>{
 })
 
 const verifyingUser = asyncHandler(async(req, res)=>{
+    const {token} = req.params;
+    
+
+        const decoded = await jwt.verify(token, process.env.VERIFY_TOKEN_SECRET)
+        if (!decoded) {
+            throw new ApiError(401, "Token is not vaild")
+        }
+        const user = await User.findOne({email: decoded.email, verificationToken: token})
+        
+        if(!user){
+            throw new ApiError(401, "Failed verifying token")
+        }
+
+        user.emailVerified = true
+        user.verificationToken = null
+        console.log(user)
+
+        user.save({validateBeforeSave: false})
+        res.status(200)
+        .json(
+            new ApiResponse(200,user, "Verified Successfully")
+        )
+    
     
 })
 
-export {user}
+export {user, verifyingUser}
