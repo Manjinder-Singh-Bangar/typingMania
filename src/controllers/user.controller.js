@@ -6,6 +6,18 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+const generateAccessAndRefreshToken = asyncHandler(async(userId)=>{
+    const user = await User.findOneAndUpdate(userId)
+
+    const refreshToken = user.generateRefreshToken()
+    const accessToken = user.generateAccessToken()
+
+    user.refreshToken = refreshToken
+
+    user.save({validateBeforeSave:false})
+
+    return {refreshToken, accessToken}
+})
 
 const generateVerifyToken = asyncHandler(async(email)=>{
     try {
@@ -126,8 +138,45 @@ const userLogin = asyncHandler(async (req,res)=>{
         throw new ApiError(401, "Password is incorrect")
     }
 
+    const {accessToken, refreshToken} = generateAccessAndRefreshToken(req._id)
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+    
     res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(200, "logged in"))
 })
 
-export {user, verifyingUser, userLogin}
+const userLogout = asyncHandler(async (req, res)=>{
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set: {
+                refreshToken: 1
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(
+            new ApiResponse(200, {}, "user logged out")
+        )
+})
+
+export {user, verifyingUser, userLogin, userLogout}
