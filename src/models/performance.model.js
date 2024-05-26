@@ -27,3 +27,5 @@ const performanceSchema = new mongoose.Schema({
         default: 100
     }
 }, { timestamps: true })
+
+export const Performance = mongoose.model("Performance",performanceSchema)
