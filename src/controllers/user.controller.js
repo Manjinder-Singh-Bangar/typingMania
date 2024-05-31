@@ -1,4 +1,4 @@
-import { User } from "../models.js/user.model.js";
+import { User } from "../models/user.model.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken"
 import { asyncHandler } from "../utils/AsyncHandler.js";
@@ -6,18 +6,24 @@ import { ApiError } from "../utils/ApiError.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const generateAccessAndRefreshToken = asyncHandler(async(userId)=>{
-    const user = await User.findOneAndUpdate(userId)
-
-    const refreshToken = user.generateRefreshToken()
-    const accessToken = user.generateAccessToken()
-
-    user.refreshToken = refreshToken
-
-    user.save({validateBeforeSave:false})
-
-    return {refreshToken, accessToken}
-})
+const generateAccessAndRefreshToken = async(userId)=>{
+    try {
+        const user = await User.findById(userId)
+    
+        const refreshToken = user.generateRefreshToken()
+        console.log(refreshToken);
+        const accessToken = user.generateAccessToken()
+        console.log(accessToken);
+    
+        user.refreshToken = refreshToken
+    
+        await user.save({validateBeforeSave:false})
+    
+        return {refreshToken, accessToken}
+    } catch (error) {
+        throw new ApiError(500, "something happened while generating access and refresh token")
+    }
+}
 
 const generateVerifyToken = asyncHandler(async(email)=>{
     try {
@@ -137,8 +143,10 @@ const userLogin = asyncHandler(async (req,res)=>{
     if(!passwordVerify){
         throw new ApiError(401, "Password is incorrect")
     }
-
-    const {accessToken, refreshToken} = generateAccessAndRefreshToken(req._id)
+    
+    
+    const {refreshToken, accessToken} = generateAccessAndRefreshToken(user._id)
+    const loggedIn = await User.findById(user._id).select("-password -refreshToken")
 
     const options = {
         httpOnly: true,
@@ -148,7 +156,7 @@ const userLogin = asyncHandler(async (req,res)=>{
     res.status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, "logged in"))
+    .json(new ApiResponse(200, loggedIn, "logged in"))
 })
 
 const userLogout = asyncHandler(async (req, res)=>{
