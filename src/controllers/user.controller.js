@@ -9,17 +9,14 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 const generateAccessAndRefreshToken = async(userId)=>{
     try {
         const user = await User.findById(userId)
-    
-        const refreshToken = user.generateRefreshToken()
-        console.log(refreshToken);
+
         const accessToken = user.generateAccessToken()
-        console.log(accessToken);
-    
+        const refreshToken = user.generateRefreshToken()
+
         user.refreshToken = refreshToken
-    
-        await user.save({validateBeforeSave:false})
-    
-        return {refreshToken, accessToken}
+        await user.save({ validateBeforeSave: false })
+
+        return { accessToken, refreshToken }
     } catch (error) {
         throw new ApiError(500, "something happened while generating access and refresh token")
     }
@@ -145,9 +142,9 @@ const userLogin = asyncHandler(async (req,res)=>{
     }
     
     
-    const {refreshToken, accessToken} = generateAccessAndRefreshToken(user._id)
+    const {refreshToken, accessToken} = await generateAccessAndRefreshToken(user._id)
+    
     const loggedIn = await User.findById(user._id).select("-password -refreshToken")
-
     const options = {
         httpOnly: true,
         secure: true
@@ -156,7 +153,7 @@ const userLogin = asyncHandler(async (req,res)=>{
     res.status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, loggedIn, "logged in"))
+    .json(new ApiResponse(200, {user:loggedIn, accessToken, refreshToken}, "logged in"))
 })
 
 const userLogout = asyncHandler(async (req, res)=>{
