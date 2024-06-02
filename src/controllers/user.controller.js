@@ -87,7 +87,7 @@ const user = asyncHandler( async(req, res)=>{
 
     return res
     .status(200)
-    .json(new ApiResponse( 200, createdUser, "User has created succesfully" ) )
+    .json(new ApiResponse( 200, createdUser, "Verify your email by clicking the link which was sent by us to you email, Thanks :)" ) )
     
 })
 
@@ -143,7 +143,7 @@ const userLogin = asyncHandler(async (req,res)=>{
     
     
     const {refreshToken, accessToken} = await generateAccessAndRefreshToken(user._id)
-    
+
     const loggedIn = await User.findById(user._id).select("-password -refreshToken")
     const options = {
         httpOnly: true,
