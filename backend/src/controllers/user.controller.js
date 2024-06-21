@@ -81,8 +81,8 @@ const user = asyncHandler( async(req, res)=>{
     
     sendEmail(user.email, user.verificationToken,
          'Email Verification',
-         `Please verify your email by clicking the following link: http://localhost:4000/verify/${token}`,
-         `Please verify your email by clicking the following link: <a href="http://localhost:4000/verify/${token}">Verify Email</a>`
+         `Please verify your email by clicking the following link: http://localhost:5173/verify/${token}`,
+         `Please verify your email by clicking the following link: <a href="http://localhost:5173/verify/${token}">Verify Email</a>`
         )
 
     return res
@@ -111,9 +111,8 @@ const verifyingUser = asyncHandler(async(req, res)=>{
     
             user.save({validateBeforeSave: false})
             return res.status(200)
-            .json(
-                new ApiResponse(200,user, "Verified Successfully")
-            )
+            .json({message: "verified successfully now you can login"})
+
         } catch (error) {
             throw new ApiError(401, "Invalid Token")
         }
@@ -150,7 +149,7 @@ const userLogin = asyncHandler(async (req,res)=>{
         secure: true
     }
     
-    res.status(200)
+    return res.status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(new ApiResponse(200, {user:loggedIn, accessToken, refreshToken}, "logged in"))
