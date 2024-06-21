@@ -87,7 +87,7 @@ const user = asyncHandler( async(req, res)=>{
 
     return res
     .status(200)
-    .json(new ApiResponse( 200, createdUser, "Verify your email by clicking the link which was sent by us to you email, Thanks :)" ) )
+    .json(new ApiResponse( 200, createdUser, "Verify your email by clicking the link which was sent by us to your email, Thanks :)" ) )
     
 })
 
@@ -110,7 +110,7 @@ const verifyingUser = asyncHandler(async(req, res)=>{
 
     
             user.save({validateBeforeSave: false})
-            res.status(200)
+            return res.status(200)
             .json(
                 new ApiResponse(200,user, "Verified Successfully")
             )
