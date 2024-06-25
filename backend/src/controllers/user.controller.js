@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { json } from "express";
 
 const generateAccessAndRefreshToken = async(userId)=>{
     try {
@@ -123,7 +124,7 @@ const userLogin = asyncHandler(async (req,res)=>{
     const {username, email, password} = req.body
 
     if(!username && !email){
-        throw ApiError(401, "Fields are required")
+        throw new Error("all fields are required")
     }
 
     const user = await User.findOne({
@@ -131,13 +132,13 @@ const userLogin = asyncHandler(async (req,res)=>{
     })
 
     if(!user){
-        throw new ApiError(401, "User not found")
+        throw new Error("User not found")
     }
 
     const passwordVerify = await user.isPasswordCorrect(password)
 
     if(!passwordVerify){
-        throw new ApiError(401, "Password is incorrect")
+        throw new Error("Incorrect password")
     }
     
     

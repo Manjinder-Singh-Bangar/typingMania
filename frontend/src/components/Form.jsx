@@ -33,7 +33,7 @@ const RegisterForm = () => {
         .then( async response =>{
 
             if(!response.ok){
-                throw new Error("something went wrong while registering user")
+                throw new Error("This account is already registered")
             }
             
             const data = await response.json()
@@ -42,6 +42,7 @@ const RegisterForm = () => {
         })
         
         .catch(error => {
+            navigate(`/failed`, {state:{message: error.message}})
             console.error('Error:', error); // Handle the error
         });
     }
@@ -73,6 +74,10 @@ const LoginForm = () =>{
     password: ""
   })
 
+  const navigate = useNavigate();
+
+
+
   const handleInput = (e) => {
     const name = e.target.name;
     const value = e.target.value;
@@ -82,6 +87,7 @@ const LoginForm = () =>{
   const handleSubmit = async (e) =>{
     e.preventDefault()
     console.log(user)
+
 
     const options = {
       method: 'POST',
@@ -94,8 +100,12 @@ const LoginForm = () =>{
     try {
       const response = await fetch("http://localhost:4000/api/v1/users/login", options)
       if(!response.ok){
-        throw new Error("Invaild credientials")
+        // navigate(`/failed`, {state:{message: response.message}})
+        navigate(`/failed`)
+        throw new Error(response.message)
       }
+
+      navigate(`/home/${user.username}`)
 
       return response.json
     } catch (error) {
