@@ -121,7 +121,6 @@ const LoginForm = () =>{
       <input onChange={handleInput} name='password' type="password" value={user.password} />
       <button onClick={handleSubmit}>Login</button>
     </form>
-
   </>
 }
 

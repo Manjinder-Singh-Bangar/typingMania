@@ -1,10 +1,10 @@
 import React from 'react'
-import { Navbar } from './navbar.jsx'
+import Playground from './Playground.jsx'
 
 export const Home = () => {
   return (
     <>
-    <Navbar />
+      <Playground /> 
     </>
 )
 }
