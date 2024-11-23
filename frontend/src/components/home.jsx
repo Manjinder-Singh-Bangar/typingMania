@@ -1,10 +1,14 @@
 import React from 'react'
-import Playground from './Playground.jsx'
+import { Countdown, SelectTimeButton } from './GameComponents/CountDown.jsx'
+
+
 
 export const Home = () => {
   return (
     <>
-      <Playground /> 
+    <div>
+      <SelectTimeButton time={30} />
+    </div>
     </>
 )
 }
