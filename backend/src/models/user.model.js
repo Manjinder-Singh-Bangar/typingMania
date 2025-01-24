@@ -57,8 +57,7 @@ userSchema.methods.generateAccessToken = function(){
     {
         expiresIn: process.env.ACCESS_TOKEN_EXPIRES
     }
-)
-}
+)}
 
 userSchema.pre("save", async function(next){
     if(!this.isModified("password")) return next()
@@ -74,8 +73,6 @@ userSchema.methods.isPasswordCorrect = async function(password){
         throw new ApiError("Invalid credientials")
     }
 }
-
-
 
 userSchema.methods.generateVerifyToken = function () {
     return jwt.sign({ email: this.email },

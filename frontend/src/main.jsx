@@ -4,7 +4,6 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App.jsx'
 import { LoginForm, RegisterForm } from './components/Form.jsx'
 import { Home } from './components/Home.jsx'
-import Playground from './components/Playground.jsx'
 
 const router = createBrowserRouter([{
   path:"/",
@@ -13,10 +12,6 @@ const router = createBrowserRouter([{
     {
       path:"",
       element:<Home />
-    },
-    {
-      path:"playground",
-      element: <Playground />
     },
     {
       path:"login",
